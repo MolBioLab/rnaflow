@@ -10,7 +10,7 @@ nextflow.enable.dsl=2
 
 // Parameters sanity checking
 
-Set valid_params = ['max_cores', 'cores', 'memory', 'profile', 'help', 'reads', 'genome', 'nanopore', 'minimap2_additional_params', 'minimap2_dir',  'annotation', 'deg', 'autodownload', 'pathway', 'species', 'include_species', 'strand', 'mode', 'tpm', 'fastp_additional_params', 'hisat2_additional_params', 'featurecounts_additional_params', 'feature_id_type', 'busco_db', 'dammit_uniref90', 'skip_sortmerna', 'skip_read_preprocessing', 'assembly', 'output', 'fastp_dir', 'sortmerna_dir', 'hisat2_dir', 'featurecounts_dir', 'tpm_filter_dir', 'annotation_dir', 'deseq2_dir', 'assembly_dir', 'rnaseq_annotation_dir', 'uniref90_dir', 'readqc_dir', 'multiqc_dir', 'nf_runinfo_dir', 'permanentCacheDir', 'condaCacheDir', 'singularityCacheDir', 'softlink_results', 'cloudProcess', 'permanent-cache-dir', 'conda-cache-dir', 'singularity-cache-dir', 'cloud-process', 'setup', 'rna'] // don't ask me why there is 'permanent-cache-dir', 'conda-cache-dir', 'singularity-cache-dir', 'cloud-process'
+Set valid_params = ['max_cores', 'cores', 'memory', 'profile', 'help', 'reads', 'genome', 'nanopore', 'minimap2_additional_params', 'minimap2_dir',  'annotation', 'deg', 'autodownload', 'pathway', 'species', 'include_species', 'strand', 'mode', 'tpm', 'fastp_additional_params', 'hisat2_additional_params', 'featurecounts_additional_params', 'feature_id_type', 'busco_db', 'dammit_uniref90', 'skip_sortmerna', 'skip_read_preprocessing', 'skip_rseqc', 'assembly', 'output', 'fastp_dir', 'sortmerna_dir', 'hisat2_dir', 'featurecounts_dir', 'tpm_filter_dir', 'annotation_dir', 'deseq2_dir', 'assembly_dir', 'rnaseq_annotation_dir', 'uniref90_dir', 'readqc_dir', 'multiqc_dir', 'nf_runinfo_dir', 'permanentCacheDir', 'condaCacheDir', 'singularityCacheDir', 'softlink_results', 'cloudProcess', 'permanent-cache-dir', 'conda-cache-dir', 'singularity-cache-dir', 'cloud-process', 'setup', 'rna', 'rseqc_dir'] // don't ask me why there is 'permanent-cache-dir', 'conda-cache-dir', 'singularity-cache-dir', 'cloud-process'
 
 def parameter_diff = params.keySet() - valid_params
 if (parameter_diff.size() != 0){
@@ -382,6 +382,7 @@ include {nanoplot as nanoplot} from './modules/nanoplot'
 include {multiqc; multiqc_sample_names} from './modules/multiqc'
 include {piano} from "./modules/piano"
 include {webgestalt} from "./modules/webgestalt.nf"
+include {rseqc_infer_experiment; rseqc_junction_annotation; rseqc_read_distribution; rseqc_gene_body_coverage; rseqc_inner_distance; rseqc_read_duplication; rseqc_bam_stat} from './modules/rseqc'
 
 // assembly & annotation
 include {trinity} from './modules/trinity'
@@ -584,7 +585,7 @@ workflow preprocess_illumina {
             sortmerna_log = Channel.empty()
         } else {
             // remove rRNA with SortmeRNA
-            sortmerna(smr_in, sortmerna_db)
+            sortmerna(smr_in, extract_tar_bz2(sortmerna_db))
             sortmerna_no_rna_fastq = sortmerna.out.no_rna_fastq
             sortmerna_log = sortmerna.out.log
         }
@@ -624,7 +625,7 @@ workflow preprocess_nanopore {
             sortmerna_log = Channel.empty()
         } else {
             // remove rRNA with SortmeRNA
-            sortmerna(read_input_ch, sortmerna_db)
+            sortmerna(read_input_ch, extract_tar_bz2(sortmerna_db))
             sortmerna_no_rna_fastq = sortmerna.out.no_rna_fastq
             sortmerna_log = sortmerna.out.log
         }
@@ -737,6 +738,37 @@ workflow expression_reference_based {
                 []
         )
 } 
+
+/******************************************
+RSeQC Quality Control analysis
+*/
+workflow rseqc_analysis {
+    take:
+        sample_bam_ch
+        annotation
+
+    main:
+        // Run various RSeQC tools for quality assessment
+        rseqc_infer_experiment(sample_bam_ch, annotation)
+        rseqc_junction_annotation(sample_bam_ch, annotation)
+        rseqc_read_distribution(sample_bam_ch, annotation)
+        rseqc_gene_body_coverage(sample_bam_ch, annotation)
+        rseqc_read_duplication(sample_bam_ch)
+        rseqc_bam_stat(sample_bam_ch)
+        
+        // Only run inner_distance for paired-end data
+        sample_bam_paired = sample_bam_ch.filter { meta, bam -> meta.paired_end }
+        rseqc_inner_distance(sample_bam_paired, annotation)
+
+    emit:
+        infer_experiment = rseqc_infer_experiment.out.infer_experiment
+        junction_annotation = rseqc_junction_annotation.out.junction_annotation
+        read_distribution = rseqc_read_distribution.out.read_distribution
+        gene_body_coverage = rseqc_gene_body_coverage.out.gene_body_coverage
+        inner_distance = rseqc_inner_distance.out.inner_distance
+        read_duplication = rseqc_read_duplication.out.read_duplication
+        bam_stat = rseqc_bam_stat.out.bam_stat
+}
 
 /*****************************************
 De novo assembly of the preprocessed RNA-Seq reads. For now do co-assembly of all samples. 
@@ -901,6 +933,15 @@ workflow {
                                     webgestalt_script,
                                     species2prefix)
             }
+            
+            // Run RSeQC quality control analysis
+            if (!params.skip_rseqc) {
+                if (!params.nanopore) {
+                    rseqc_analysis(preprocess_illumina.out.sample_bam_ch, annotation)
+                } else {
+                    rseqc_analysis(preprocess_nanopore.out.sample_bam_ch, annotation)
+                }
+            }
         }
     }
 }
@@ -951,6 +992,7 @@ def helpMSG() {
     --fastp_additional_params          Additional parameters for fastp [default: $params.fastp_additional_params]
     --skip_sortmerna                   Skip rRNA removal via SortMeRNA [default: $params.skip_sortmerna] 
     --skip_read_preprocessing          Skip preprocessing with fastp [default: $params.skip_read_preprocessing]
+    --skip_rseqc                       Skip RSeQC quality control analysis [default: $params.skip_rseqc]
     --hisat2_additional_params         Additional parameters for HISAT2 [default: $params.hisat2_additional_params]
     --minimap2_additional_params       Additional parameters for minimap2 (Nanopore input) [default: $params.minimap2_additional_params]
     --featurecounts_additional_params  Additional parameters for FeatureCounts [default: $params.featurecounts_additional_params]

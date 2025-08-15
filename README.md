@@ -47,8 +47,7 @@ ____
 - [Working offline](#working-offline)
 - [Help message](#help-message)
 - [Known bugs and issues](#known-bugs-and-issues)
-  - [Reference file name](#reference-file-name) 
-  - [Problems with `SortMeRNA`/ `HISAT2` error](#problems-with-sortmerna-hisat2-error-141-116)
+  - [Problems with `SortMeRNA`/ `HISAT2` error (#141, [#116](https://github.com/hoelzer-lab/rnaflow/issues/116))](#problems-with-sortmerna-hisat2-error-141-116)
     - [Description](#description)
     - [Workaround](#workaround)
   - [Latency problems on HPCs, issue (#79)](#latency-problems-on-hpcs-issue-79)
@@ -613,10 +612,6 @@ We also provide some pre-configured profiles for certain HPC environments:
 
 ## Known bugs and issues
 
-### Don't name your reference genome file `reference.fa`
-
-Internally, this will cause problems because of how RNAflow renames the file for processing. Please use another name (anyway, it's a good idea to be more descriptive in your file names). 
-
 ### Problems with `SortMeRNA`/ `HISAT2` error ([#141](https://github.com/hoelzer-lab/rnaflow/issues/141), [#116](https://github.com/hoelzer-lab/rnaflow/issues/116))
 
 #### Description
@@ -710,7 +705,7 @@ Command error:
 
 #### Description
 
-Latency-related problems with `Nextflow` might occur when running on HPC systems, where `Nextflow` expects files to be available before they are fully written to the file system. In these cases, `Nextflow` might get stuck or report missing output or input files to some processes:
+Latency related problems with `Nextflow` might occur when running on HPC systems, where `Nextflow` expects files to be available before they are fully written to the file system. In these cases `Nextflow` might get stuck or report missing output or input files to some processes:
  
 
 ```
