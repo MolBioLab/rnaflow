@@ -12,7 +12,6 @@ process rseqc_bam_stat {
 
     input:
     tuple val(meta), path(bam)
-    path(bai)
 
     output:
     tuple val(meta), path("${meta.sample}.bam_stat.txt"), emit: bam_stat
@@ -32,7 +31,6 @@ process rseqc_inner_distance {
 
     input:
     tuple val(meta), path(bam)
-    path(bai)
     path(annotation)
 
     output:
@@ -53,7 +51,6 @@ process rseqc_junction_annotation {
 
     input:
     tuple val(meta), path(bam)
-    path(bai)
     path(annotation)
 
     output:
@@ -74,7 +71,6 @@ process rseqc_read_distribution {
 
     input:
     tuple val(meta), path(bam)
-    path(bai)
     path(annotation)
 
     output:
@@ -95,7 +91,6 @@ process rseqc_gene_body_coverage {
 
     input:
     tuple val(meta), path(bam)
-    path(bai)
     path(annotation)
 
     output:
@@ -116,7 +111,6 @@ process rseqc_read_duplication {
 
     input:
     tuple val(meta), path(bam)
-    path(bai)
 
     output:
     tuple val(meta), path("${meta.sample}.DupRate.pdf"), path("${meta.sample}.DupRate.txt"), emit: read_duplication
@@ -136,7 +130,6 @@ process rseqc_tin {
 
     input:
     tuple val(meta), path(bam)
-    path(bai)
     path(annotation)
 
     output:
