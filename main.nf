@@ -766,7 +766,14 @@ workflow expression_reference_based {
                 tpm_filter.out.stats,
                 params.tpm,
                 [],
-                []
+                [],
+                rseqc_analysis.out.bam_stat.collect().ifEmpty([]),
+                rseqc_analysis.out.inner_distance.collect().ifEmpty([]),
+                rseqc_analysis.out.junction_annotation.collect().ifEmpty([]),
+                rseqc_analysis.out.read_distribution.collect().ifEmpty([]),
+                rseqc_analysis.out.gene_body_coverage.collect().ifEmpty([]),
+                rseqc_analysis.out.read_duplication.collect().ifEmpty([]),
+                rseqc_analysis.out.tin.collect().ifEmpty([])
         )
 } 
 

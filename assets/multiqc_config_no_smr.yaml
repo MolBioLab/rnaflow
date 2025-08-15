@@ -15,6 +15,8 @@ module_order:
         anchor: 'hisat2'
     - featureCounts:
         anchor: 'featureCounts'
+    - rseqc:
+        anchor: 'rseqc'
     - busco:
         anchor: 'busco'
     - custom_data
@@ -30,8 +32,10 @@ report_section_order:
         after: fastqc_trimmed
     featureCounts:
         after: hisat2
-    tpm_filter:
+    rseqc:
         after: featureCounts
+    tpm_filter:
+        after: rseqc
     
 
 custom_data:
@@ -50,3 +54,11 @@ sp:
         fn: 'tpm_stats.tsv'
     busco:
         fn: 'busco_*_summary*'
+    rseqc:
+        fn: '*.bam_stat.txt'
+        fn: '*.inner_distance.txt'
+        fn: '*.junction_annotation.txt'
+        fn: '*.read_distribution.txt'
+        fn: '*.geneBodyCoverage.txt'
+        fn: '*.DupRate.txt'
+        fn: '*.tin.xls'
