@@ -10,7 +10,7 @@ nextflow.enable.dsl=2
 
 // Parameters sanity checking
 
-Set valid_params = ['max_cores', 'cores', 'memory', 'profile', 'help', 'reads', 'genome', 'nanopore', 'minimap2_additional_params', 'minimap2_dir',  'annotation', 'deg', 'autodownload', 'pathway', 'species', 'include_species', 'strand', 'mode', 'tpm', 'fastp_additional_params', 'hisat2_additional_params', 'featurecounts_additional_params', 'feature_id_type', 'busco_db', 'dammit_uniref90', 'skip_sortmerna', 'skip_read_preprocessing', 'assembly', 'output', 'fastp_dir', 'sortmerna_dir', 'hisat2_dir', 'featurecounts_dir', 'tpm_filter_dir', 'annotation_dir', 'deseq2_dir', 'assembly_dir', 'rnaseq_annotation_dir', 'uniref90_dir', 'readqc_dir', 'multiqc_dir', 'nf_runinfo_dir', 'permanentCacheDir', 'condaCacheDir', 'singularityCacheDir', 'softlink_results', 'cloudProcess', 'permanent-cache-dir', 'conda-cache-dir', 'singularity-cache-dir', 'cloud-process', 'setup', 'rna'] // don't ask me why there is 'permanent-cache-dir', 'conda-cache-dir', 'singularity-cache-dir', 'cloud-process'
+Set valid_params = ['max_cores', 'cores', 'memory', 'profile', 'help', 'reads', 'genome', 'nanopore', 'minimap2_additional_params', 'minimap2_dir',  'annotation', 'deg', 'autodownload', 'pathway', 'species', 'include_species', 'strand', 'mode', 'tpm', 'fastp_additional_params', 'hisat2_additional_params', 'featurecounts_additional_params', 'feature_id_type', 'busco_db', 'dammit_uniref90', 'skip_sortmerna', 'skip_read_preprocessing', 'assembly', 'output', 'fastp_dir', 'sortmerna_dir', 'hisat2_dir', 'featurecounts_dir', 'tpm_filter_dir', 'rseqc_dir', 'annotation_dir', 'deseq2_dir', 'assembly_dir', 'rnaseq_annotation_dir', 'uniref90_dir', 'readqc_dir', 'multiqc_dir', 'nf_runinfo_dir', 'permanentCacheDir', 'condaCacheDir', 'singularityCacheDir', 'softlink_results', 'cloudProcess', 'permanent-cache-dir', 'conda-cache-dir', 'singularity-cache-dir', 'cloud-process', 'setup', 'rna'] // don't ask me why there is 'permanent-cache-dir', 'conda-cache-dir', 'singularity-cache-dir', 'cloud-process'
 
 def parameter_diff = params.keySet() - valid_params
 if (parameter_diff.size() != 0){
@@ -382,6 +382,7 @@ include {nanoplot as nanoplot} from './modules/nanoplot'
 include {multiqc; multiqc_sample_names} from './modules/multiqc'
 include {piano} from "./modules/piano"
 include {webgestalt} from "./modules/webgestalt.nf"
+include {rseqc_bam_stat; rseqc_inner_distance; rseqc_junction_annotation; rseqc_read_distribution; rseqc_gene_body_coverage; rseqc_read_duplication; rseqc_tin} from './modules/rseqc'
 
 // assembly & annotation
 include {trinity} from './modules/trinity'
@@ -649,6 +650,34 @@ workflow preprocess_nanopore {
 
 
 /******************************************
+RSeQC Quality Control Analysis
+*/
+workflow rseqc_analysis {
+    take:
+        sample_bam_ch
+        annotation
+
+    main:
+        // Run RSeQC analyses
+        rseqc_bam_stat(sample_bam_ch)
+        rseqc_inner_distance(sample_bam_ch, annotation)
+        rseqc_junction_annotation(sample_bam_ch, annotation)
+        rseqc_read_distribution(sample_bam_ch, annotation)
+        rseqc_gene_body_coverage(sample_bam_ch, annotation)
+        rseqc_read_duplication(sample_bam_ch)
+        rseqc_tin(sample_bam_ch, annotation)
+
+    emit:
+        bam_stat = rseqc_bam_stat.out.bam_stat
+        inner_distance = rseqc_inner_distance.out.inner_distance
+        junction_annotation = rseqc_junction_annotation.out.junction_annotation
+        read_distribution = rseqc_read_distribution.out.read_distribution
+        gene_body_coverage = rseqc_gene_body_coverage.out.gene_body_coverage
+        read_duplication = rseqc_read_duplication.out.read_duplication
+        tin = rseqc_tin.out.tin
+}
+
+/******************************************
 Differential gene expression analysis using a genome reference
 */
 workflow expression_reference_based {
@@ -672,6 +701,9 @@ workflow expression_reference_based {
     main:
         // count with featurecounts
         featurecounts(sample_bam_ch, annotation, params.featurecounts_additional_params)
+
+        // RSeQC quality control analysis
+        rseqc_analysis(sample_bam_ch, annotation)
 
         // prepare annotation for R input
         format_annotation_gene_rows(annotation, gtf_feature_type_ch)

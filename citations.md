@@ -17,6 +17,9 @@
 * [featureCounts](https://www.ncbi.nlm.nih.gov/pubmed/24227677/)
   > Liao Y, Smyth GK, Shi W. featureCounts: an efficient general purpose program for assigning sequence reads to genomic features. Bioinformatics. 2014 Apr 1;30(7):923-30. doi: 10.1093/bioinformatics/btt656. Epub 2013 Nov 13. PubMed PMID: 24227677.
 
+* [RSeQC](https://pubmed.ncbi.nlm.nih.gov/22743226/)
+  > Wang L, Wang S, Li W. RSeQC: quality control of RNA-seq experiments. Bioinformatics. 2012 Aug 15;28(16):2184-5. doi: 10.1093/bioinformatics/bts356. Epub 2012 Jun 28. PubMed PMID: 22743226; PubMed Central PMCID: PMC3414447.
+
 * [HISAT2](https://www.ncbi.nlm.nih.gov/pubmed/31375807/)
   > Kim D, Paggi JM, Park C, Bennett C, Salzberg SL. Graph-based genome alignment and genotyping with HISAT2 and HISAT-genotype Graph-based genome alignment and genotyping with HISAT2 and HISAT-genotype. Nat Biotechnol. 2019 Aug;37(8):907-915. doi: 10.1038/s41587-019-0201-4. Epub 2019 Aug 2. PubMed PMID: 31375807.
 
