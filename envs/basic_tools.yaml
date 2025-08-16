@@ -1,5 +1,7 @@
 name: basic_tools
 channels:
+  - bioconda
   - conda-forge
 dependencies:
   - wget=1.20.1
+  - bedtools
