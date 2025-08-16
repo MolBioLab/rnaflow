@@ -658,17 +658,12 @@ workflow rseqc_analysis {
         annotation
 
     main:
-        // Chuyển đổi annotation GTF sang BED
-        gtf_to_bed(annotation)
-        // Run RSeQC analyses
         rseqc_bam_stat(sample_bam_ch)
         rseqc_read_duplication(sample_bam_ch)
-        rseqc_gene_body_coverage(sample_bam_ch, gtf_to_bed.out.bed)
 
     emit:
         bam_stat = rseqc_bam_stat.out.bam_stat
         read_duplication = rseqc_read_duplication.out.read_duplication
-        gene_body_coverage = rseqc_gene_body_coverage.out.gene_body_coverage
 }
 
 /******************************************
