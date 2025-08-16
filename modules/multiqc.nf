@@ -23,7 +23,6 @@ process multiqc {
     path(reference_busco_summary)
     path(rseqc_bam_stat)
     path(rseqc_read_duplication)
-    path(rseqc_gene_body_coverage)
 
     output:
     path "multiqc_report.html"
