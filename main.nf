@@ -382,7 +382,7 @@ include {nanoplot as nanoplot} from './modules/nanoplot'
 include {multiqc; multiqc_sample_names} from './modules/multiqc'
 include {piano} from "./modules/piano"
 include {webgestalt} from "./modules/webgestalt.nf"
-include {rseqc_bam_stat; rseqc_read_duplication} from './modules/rseqc'
+include {rseqc_bam_stat; rseqc_read_duplication; gtf_to_bed; rseqc_gene_body_coverage} from './modules/rseqc'
 
 // assembly & annotation
 include {trinity} from './modules/trinity'
@@ -658,13 +658,17 @@ workflow rseqc_analysis {
         annotation
 
     main:
+        // Chuyển đổi annotation GTF sang BED
+        gtf_to_bed(annotation)
         // Run RSeQC analyses
         rseqc_bam_stat(sample_bam_ch)
         rseqc_read_duplication(sample_bam_ch)
+        rseqc_gene_body_coverage(sample_bam_ch, gtf_to_bed.out.bed)
 
     emit:
         bam_stat = rseqc_bam_stat.out.bam_stat
         read_duplication = rseqc_read_duplication.out.read_duplication
+        gene_body_coverage = rseqc_gene_body_coverage.out.gene_body_coverage
 }
 
 /******************************************
@@ -758,7 +762,8 @@ workflow expression_reference_based {
                 [],
                 [],
                 rseqc_analysis.out.bam_stat.collect().ifEmpty([]),
-                rseqc_analysis.out.read_duplication.collect().ifEmpty([])
+                rseqc_analysis.out.read_duplication.collect().ifEmpty([]),
+                rseqc_analysis.out.gene_body_coverage.collect().ifEmpty([])
         )
 } 
 

@@ -57,3 +57,4 @@ sp:
     rseqc:
         fn: '*.bam_stat.txt'
         fn: '*.DupRate.txt'
+        fn: '*.geneBodyCoverage.txt'

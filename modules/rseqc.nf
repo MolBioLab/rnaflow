@@ -41,3 +41,32 @@ process rseqc_read_duplication {
     read_duplication.py -i ${bam} -o ${meta.sample}.DupRate
     """
 } 
+
+process gtf_to_bed {
+    label 'basic_tools'
+    tag "$meta.sample"
+    input:
+    tuple val(meta), path(gtf)
+    output:
+    tuple val(meta), path("${meta.sample}.bed"), emit: bed
+    script:
+    """
+    bedtools gtf2bed < ${gtf} > ${meta.sample}.bed
+    """
+}
+
+process rseqc_gene_body_coverage {
+    label 'rseqc'
+    tag "$meta.sample"
+    if ( params.softlink_results ) { publishDir "${params.output}/${params.rseqc_dir}/gene_body_coverage", pattern: "*.pdf,*.txt" }
+    else { publishDir "${params.output}/${params.rseqc_dir}/gene_body_coverage", mode: 'copy', pattern: "*.pdf,*.txt" }
+    input:
+    tuple val(meta), path(bam)
+    path(bed)
+    output:
+    tuple val(meta), path("${meta.sample}.geneBodyCoverage.pdf"), path("${meta.sample}.geneBodyCoverage.txt"), emit: gene_body_coverage
+    script:
+    """
+    geneBody_coverage.py -i ${bam} -o ${meta.sample}.geneBodyCoverage -r ${bed}
+    """
+} 
