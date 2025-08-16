@@ -44,14 +44,13 @@ process rseqc_read_duplication {
 
 process gtf_to_bed {
     label 'basic_tools'
-    tag "$meta.sample"
     input:
-    tuple val(meta), path(gtf)
+    path gtf
     output:
-    tuple val(meta), path("${meta.sample}.bed"), emit: bed
+    path("annotation.bed"), emit: bed
     script:
     """
-    bedtools gtf2bed < ${gtf} > ${meta.sample}.bed
+    bedtools gtf2bed < ${gtf} > annotation.bed
     """
 }
 
