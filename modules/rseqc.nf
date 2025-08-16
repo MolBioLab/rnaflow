@@ -33,7 +33,8 @@ process rseqc_read_duplication {
     tuple val(meta), path(bam)
 
     output:
-    tuple val(meta), path("${meta.sample}.DupRate.pdf"), path("${meta.sample}.DupRate.txt"), emit: read_duplication
+    tuple val(meta), path("${meta.sample}.DupRate.txt"), emit: read_duplication
+    path("${meta.sample}.DupRate.pdf", optional: true)
 
     script:
     """
