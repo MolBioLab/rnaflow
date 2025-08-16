@@ -65,4 +65,3 @@ sp:
         fn: '*.read_distribution.txt'
         fn: '*.geneBodyCoverage.txt'
         fn: '*.DupRate.txt'
-        fn: '*.tin.xls'

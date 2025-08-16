@@ -119,24 +119,4 @@ process rseqc_read_duplication {
     """
     read_duplication.py -i ${bam} -o ${meta.sample}.DupRate
     """
-}
-
-process rseqc_tin {
-    label 'rseqc'
-    tag "$meta.sample"
-    
-    if ( params.softlink_results ) { publishDir "${params.output}/${params.rseqc_dir}/tin", pattern: "*.txt" }
-    else { publishDir "${params.output}/${params.rseqc_dir}/tin", mode: 'copy', pattern: "*.txt" }
-
-    input:
-    tuple val(meta), path(bam)
-    path(annotation)
-
-    output:
-    tuple val(meta), path("${meta.sample}.tin.xls"), emit: tin
-
-    script:
-    """
-    tin.py -i ${bam} -r ${annotation} -s ${meta.strandedness}
-    """
 } 

@@ -27,7 +27,6 @@ process multiqc {
     path(rseqc_read_distribution)
     path(rseqc_gene_body_coverage)
     path(rseqc_read_duplication)
-    path(rseqc_tin)
 
     output:
     path "multiqc_report.html"
