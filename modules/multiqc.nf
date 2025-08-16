@@ -22,10 +22,6 @@ process multiqc {
     path(denovo_busco_summary)
     path(reference_busco_summary)
     path(rseqc_bam_stat)
-    path(rseqc_inner_distance)
-    path(rseqc_junction_annotation)
-    path(rseqc_read_distribution)
-    path(rseqc_gene_body_coverage)
     path(rseqc_read_duplication)
 
     output:

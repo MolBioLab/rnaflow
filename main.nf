@@ -382,7 +382,7 @@ include {nanoplot as nanoplot} from './modules/nanoplot'
 include {multiqc; multiqc_sample_names} from './modules/multiqc'
 include {piano} from "./modules/piano"
 include {webgestalt} from "./modules/webgestalt.nf"
-include {rseqc_bam_stat; rseqc_inner_distance; rseqc_junction_annotation; rseqc_read_distribution; rseqc_gene_body_coverage; rseqc_read_duplication} from './modules/rseqc'
+include {rseqc_bam_stat; rseqc_read_duplication} from './modules/rseqc'
 
 // assembly & annotation
 include {trinity} from './modules/trinity'
@@ -660,18 +660,10 @@ workflow rseqc_analysis {
     main:
         // Run RSeQC analyses
         rseqc_bam_stat(sample_bam_ch)
-        rseqc_inner_distance(sample_bam_ch, annotation)
-        rseqc_junction_annotation(sample_bam_ch, annotation)
-        rseqc_read_distribution(sample_bam_ch, annotation)
-        rseqc_gene_body_coverage(sample_bam_ch, annotation)
         rseqc_read_duplication(sample_bam_ch)
 
     emit:
         bam_stat = rseqc_bam_stat.out.bam_stat
-        inner_distance = rseqc_inner_distance.out.inner_distance
-        junction_annotation = rseqc_junction_annotation.out.junction_annotation
-        read_distribution = rseqc_read_distribution.out.read_distribution
-        gene_body_coverage = rseqc_gene_body_coverage.out.gene_body_coverage
         read_duplication = rseqc_read_duplication.out.read_duplication
 }
 
@@ -766,10 +758,6 @@ workflow expression_reference_based {
                 [],
                 [],
                 rseqc_analysis.out.bam_stat.collect().ifEmpty([]),
-                rseqc_analysis.out.inner_distance.collect().ifEmpty([]),
-                rseqc_analysis.out.junction_annotation.collect().ifEmpty([]),
-                rseqc_analysis.out.read_distribution.collect().ifEmpty([]),
-                rseqc_analysis.out.gene_body_coverage.collect().ifEmpty([]),
                 rseqc_analysis.out.read_duplication.collect().ifEmpty([])
         )
 } 

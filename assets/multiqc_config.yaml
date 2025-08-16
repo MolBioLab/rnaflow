@@ -60,8 +60,4 @@ sp:
         fn: 'busco_*_summary*'
     rseqc:
         fn: '*.bam_stat.txt'
-        fn: '*.inner_distance.txt'
-        fn: '*.junction_annotation.txt'
-        fn: '*.read_distribution.txt'
-        fn: '*.geneBodyCoverage.txt'
         fn: '*.DupRate.txt'
