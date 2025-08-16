@@ -757,8 +757,7 @@ workflow expression_reference_based {
                 [],
                 [],
                 rseqc_analysis.out.bam_stat.collect().ifEmpty([]),
-                rseqc_analysis.out.read_duplication.collect().ifEmpty([]),
-                rseqc_analysis.out.gene_body_coverage.collect().ifEmpty([])
+                rseqc_analysis.out.read_duplication.collect().ifEmpty([])
         )
 } 
 
