@@ -36,3 +36,30 @@ process featurecounts {
     """
     }
 }
+
+/************************************************************************
+* Read counts summed by gene biotype, as a MultiQC custom-content table
+************************************************************************/
+process featurecounts_biotype_mqc {
+    label 'python3'
+    tag "all_samples"
+
+    if ( params.softlink_results ) { publishDir "${params.output}/${params.featurecounts_dir}", pattern: "featurecounts_biotype_mqc.tsv" }
+    else { publishDir "${params.output}/${params.featurecounts_dir}", mode: 'copy', pattern: "featurecounts_biotype_mqc.tsv" }
+
+    input:
+    path(counts_files)
+    path(annotation)
+
+    output:
+    path "featurecounts_biotype_mqc.tsv", emit: mqc
+
+    script:
+    """
+    python3 ${projectDir}/bin/featurecounts_biotype_mqc.py \\
+        --counts ${counts_files.join(' ')} \\
+        --gtf ${annotation} \\
+        --biotype gene_biotype \\
+        --out featurecounts_biotype_mqc.tsv
+    """
+}

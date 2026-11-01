@@ -380,7 +380,7 @@ include {sortmerna} from './modules/sortmerna'
 include {hisat2; index_bam} from './modules/hisat2'
 include {star} from './modules/star'
 include {minimap2; index_bam_minimap2} from './modules/minimap2'
-include {featurecounts} from './modules/featurecounts'
+include {featurecounts; featurecounts_biotype_mqc} from './modules/featurecounts'
 include {tpm_filter} from './modules/tpm_filter'
 include {deseq2} from './modules/deseq2'
 include {fastqc as fastqcPre; fastqc as fastqcPost} from './modules/fastqc'
@@ -788,6 +788,9 @@ workflow expression_reference_based {
         // count with featurecounts
         featurecounts(sample_bam_ch, annotation, params.featurecounts_additional_params)
 
+        // read counts per gene biotype for MultiQC
+        featurecounts_biotype_mqc(featurecounts.out.counts.map { sample, counts -> counts }.collect(), annotation)
+
         // prepare annotation for R input
         format_annotation_gene_rows(annotation, gtf_feature_type_ch)
         format_annotation(annotation, gtf_attr_type_ch, gtf_feature_type_ch)
@@ -844,6 +847,7 @@ workflow expression_reference_based {
                 sortmerna_log.collect().ifEmpty([]), 
                 mapping_log_ch.collect(), 
                 featurecounts.out.log.collect(),
+                featurecounts_biotype_mqc.out.mqc.collect().ifEmpty([]),
                 readqcPre.collect().ifEmpty([]),
                 readqcPost.collect().ifEmpty([]),
                 rseqc_bam_stat_mqc.collect().ifEmpty([]),

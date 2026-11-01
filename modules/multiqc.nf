@@ -15,6 +15,7 @@ process multiqc {
     path(sortmerna)
     path(mapping_log_ch)
     path(featurecounts)
+    path(featurecounts_biotype_mqc)
     path(fastqcPre)
     path(fastqcPost)
     path(rseqc_bam_stat)
