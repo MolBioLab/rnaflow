@@ -10,7 +10,7 @@ nextflow.enable.dsl=2
 
 // Parameters sanity checking
 
-Set valid_params = ['max_cores', 'cores', 'memory', 'profile', 'help', 'reads', 'genome', 'nanopore', 'minimap2_additional_params', 'minimap2_dir',  'annotation', 'deg', 'autodownload', 'pathway', 'species', 'include_species', 'strand', 'mode', 'tpm', 'fastp_additional_params', 'hisat2_additional_params', 'featurecounts_additional_params', 'feature_id_type', 'busco_db', 'dammit_uniref90', 'skip_sortmerna', 'skip_read_preprocessing', 'run_rseqc', 'assembly', 'output', 'fastp_dir', 'sortmerna_dir', 'hisat2_dir', 'rseqc_dir', 'featurecounts_dir', 'tpm_filter_dir', 'annotation_dir', 'deseq2_dir', 'assembly_dir', 'rnaseq_annotation_dir', 'uniref90_dir', 'readqc_dir', 'multiqc_dir', 'nf_runinfo_dir', 'permanentCacheDir', 'condaCacheDir', 'singularityCacheDir', 'softlink_results', 'cloudProcess', 'permanent-cache-dir', 'conda-cache-dir', 'singularity-cache-dir', 'cloud-process', 'setup', 'rna', 'aligner', 'star_additional_params', 'star_dir', 'star_sjdbOverhang','star_sjdb-overhang'] // don't ask me why there is 'permanent-cache-dir', 'conda-cache-dir', 'singularity-cache-dir', 'cloud-process'
+Set valid_params = ['max_cores', 'cores', 'memory', 'profile', 'help', 'reads', 'genome', 'nanopore', 'minimap2_additional_params', 'minimap2_dir',  'annotation', 'deg', 'autodownload', 'pathway', 'species', 'include_species', 'strand', 'mode', 'tpm', 'fastp_additional_params', 'hisat2_additional_params', 'featurecounts_additional_params', 'feature_id_type', 'busco_db', 'dammit_uniref90', 'skip_sortmerna', 'skip_read_preprocessing', 'run_rseqc', 'rseqc_gene_body_bed', 'rseqc_skip_gene_body', 'assembly', 'output', 'fastp_dir', 'sortmerna_dir', 'hisat2_dir', 'rseqc_dir', 'featurecounts_dir', 'tpm_filter_dir', 'annotation_dir', 'deseq2_dir', 'assembly_dir', 'rnaseq_annotation_dir', 'uniref90_dir', 'readqc_dir', 'multiqc_dir', 'nf_runinfo_dir', 'permanentCacheDir', 'condaCacheDir', 'singularityCacheDir', 'softlink_results', 'cloudProcess', 'permanent-cache-dir', 'conda-cache-dir', 'singularity-cache-dir', 'cloud-process', 'setup', 'rna', 'aligner', 'star_additional_params', 'star_dir', 'star_sjdbOverhang','star_sjdb-overhang'] // don't ask me why there is 'permanent-cache-dir', 'conda-cache-dir', 'singularity-cache-dir', 'cloud-process'
 
 def parameter_diff = params.keySet() - valid_params
 if (parameter_diff.size() != 0){
@@ -651,10 +651,11 @@ workflow preprocess_illumina {
             ucsc_gtf_to_bed(annotation)
             rseqc_bam_stat(bam_bai_out)
             rseqc_read_duplication(bam_bai_out)
-            rseqc_gene_body_coverage(
-    		bam_bai_out,
-    		ucsc_gtf_to_bed.out.bed
-    	    )
+            // geneBody_coverage.py is slow on a full-transcriptome BED: allow a smaller BED (e.g. housekeeping genes) or skipping it
+            if (!params.rseqc_skip_gene_body) {
+                gene_body_bed = params.rseqc_gene_body_bed ? file(params.rseqc_gene_body_bed, checkIfExists: true) : ucsc_gtf_to_bed.out.bed
+                rseqc_gene_body_coverage(bam_bai_out, gene_body_bed)
+            }
     	    
     	    rseqc_infer_experiment(bam_bai_out, ucsc_gtf_to_bed.out.bed)
     	    rseqc_read_distribution(bam_bai_out, ucsc_gtf_to_bed.out.bed)
@@ -663,7 +664,7 @@ workflow preprocess_illumina {
 
             bam_stat_ch = rseqc_bam_stat.out.bam_stat
             read_duplication_ch = rseqc_read_duplication.out.read_duplication_files
-            gene_body_coverage_ch = rseqc_gene_body_coverage.out.gene_body_coverage_files
+            if (!params.rseqc_skip_gene_body) { gene_body_coverage_ch = rseqc_gene_body_coverage.out.gene_body_coverage_files }
             infer_experiment_ch = rseqc_infer_experiment.out.infer_experiment
             read_distribution_ch = rseqc_read_distribution.out.read_distribution
             junction_annotation_ch = rseqc_junction_annotation.out.junction_annotation_files
