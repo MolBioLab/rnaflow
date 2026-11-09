@@ -1,6 +1,37 @@
 /************************************************************************
 * RSeQC
 ************************************************************************/
+/************************************************************************
+* Optional deterministic subsampling of the BAM before the slow RSeQC modules
+************************************************************************/
+process rseqc_subsample_bam {
+    label 'hisat2'
+    tag "$meta.sample"
+
+    input:
+    tuple val(meta), path(bam), path(bai)
+
+    output:
+    tuple val(meta), path("${meta.sample}.rseqc_sub.bam"), path("${meta.sample}.rseqc_sub.bam.bai"), emit: bam_bai
+
+    script:
+    """
+    # number of primary mapped alignments (exclude unmapped 0x4, secondary 0x100, supplementary 0x800)
+    total=\$(samtools view -c -F 0x904 ${bam})
+    target=${params.rseqc_subsample_reads}
+
+    if [ "\$total" -le "\$target" ]; then
+        # fewer reads than requested: keep everything
+        cp ${bam} ${meta.sample}.rseqc_sub.bam
+    else
+        # samtools -s SEED.FRAC keeps reads by hash of the read name, so mates stay together
+        frac=\$(awk -v n=\$target -v t=\$total 'BEGIN{printf "%.6f", n/t}')
+        samtools view -b -@ ${task.cpus} -s 42\${frac#0} ${bam} > ${meta.sample}.rseqc_sub.bam
+    fi
+    samtools index ${meta.sample}.rseqc_sub.bam
+    """
+}
+
 process rseqc_bam_stat {
     label 'rseqc'
     tag "$meta.sample"

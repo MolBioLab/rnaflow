@@ -10,7 +10,7 @@ nextflow.enable.dsl=2
 
 // Parameters sanity checking
 
-Set valid_params = ['max_cores', 'cores', 'memory', 'profile', 'help', 'reads', 'genome', 'nanopore', 'minimap2_additional_params', 'minimap2_dir',  'annotation', 'deg', 'autodownload', 'pathway', 'species', 'include_species', 'strand', 'mode', 'tpm', 'fastp_additional_params', 'hisat2_additional_params', 'featurecounts_additional_params', 'feature_id_type', 'busco_db', 'dammit_uniref90', 'skip_sortmerna', 'skip_read_preprocessing', 'run_rseqc', 'rseqc_gene_body_bed', 'rseqc_skip_gene_body', 'assembly', 'output', 'fastp_dir', 'sortmerna_dir', 'hisat2_dir', 'rseqc_dir', 'featurecounts_dir', 'tpm_filter_dir', 'annotation_dir', 'deseq2_dir', 'assembly_dir', 'rnaseq_annotation_dir', 'uniref90_dir', 'readqc_dir', 'multiqc_dir', 'nf_runinfo_dir', 'permanentCacheDir', 'condaCacheDir', 'singularityCacheDir', 'softlink_results', 'cloudProcess', 'permanent-cache-dir', 'conda-cache-dir', 'singularity-cache-dir', 'cloud-process', 'setup', 'rna', 'aligner', 'star_additional_params', 'star_dir', 'star_sjdbOverhang','star_sjdb-overhang'] // don't ask me why there is 'permanent-cache-dir', 'conda-cache-dir', 'singularity-cache-dir', 'cloud-process'
+Set valid_params = ['max_cores', 'cores', 'memory', 'profile', 'help', 'reads', 'genome', 'nanopore', 'minimap2_additional_params', 'minimap2_dir',  'annotation', 'deg', 'autodownload', 'pathway', 'species', 'include_species', 'strand', 'mode', 'tpm', 'fastp_additional_params', 'hisat2_additional_params', 'featurecounts_additional_params', 'feature_id_type', 'busco_db', 'dammit_uniref90', 'skip_sortmerna', 'skip_read_preprocessing', 'run_rseqc', 'rseqc_gene_body_bed', 'rseqc_skip_gene_body', 'rseqc_subsample_reads', 'assembly', 'output', 'fastp_dir', 'sortmerna_dir', 'hisat2_dir', 'rseqc_dir', 'featurecounts_dir', 'tpm_filter_dir', 'annotation_dir', 'deseq2_dir', 'assembly_dir', 'rnaseq_annotation_dir', 'uniref90_dir', 'readqc_dir', 'multiqc_dir', 'nf_runinfo_dir', 'permanentCacheDir', 'condaCacheDir', 'singularityCacheDir', 'softlink_results', 'cloudProcess', 'permanent-cache-dir', 'conda-cache-dir', 'singularity-cache-dir', 'cloud-process', 'setup', 'rna', 'aligner', 'star_additional_params', 'star_dir', 'star_sjdbOverhang','star_sjdb-overhang'] // don't ask me why there is 'permanent-cache-dir', 'conda-cache-dir', 'singularity-cache-dir', 'cloud-process'
 
 def parameter_diff = params.keySet() - valid_params
 if (parameter_diff.size() != 0){
@@ -388,7 +388,7 @@ include {nanoplot as nanoplot} from './modules/nanoplot'
 include {multiqc; multiqc_sample_names} from './modules/multiqc'
 include {piano} from "./modules/piano"
 include {webgestalt} from "./modules/webgestalt.nf"
-include {rseqc_bam_stat; rseqc_read_duplication; rseqc_gene_body_coverage; rseqc_infer_experiment; rseqc_read_distribution; rseqc_junction_annotation; rseqc_junction_saturation; rseqc_inner_distance} from './modules/rseqc'
+include {rseqc_subsample_bam; rseqc_bam_stat; rseqc_read_duplication; rseqc_gene_body_coverage; rseqc_infer_experiment; rseqc_read_distribution; rseqc_junction_annotation; rseqc_junction_saturation; rseqc_inner_distance} from './modules/rseqc'
 include {ucsc_gtf_to_bed} from './modules/local/ucsc'
 
 // assembly & annotation
@@ -651,16 +651,23 @@ workflow preprocess_illumina {
             ucsc_gtf_to_bed(annotation)
             rseqc_bam_stat(bam_bai_out)
             rseqc_read_duplication(bam_bai_out)
+
+            // optional: subsample the BAM for the slow modules (bam_stat and read_duplication always use the full BAM)
+            rseqc_bam = bam_bai_out
+            if (params.rseqc_subsample_reads > 0) {
+                rseqc_subsample_bam(bam_bai_out)
+                rseqc_bam = rseqc_subsample_bam.out.bam_bai
+            }
             // geneBody_coverage.py is slow on a full-transcriptome BED: allow a smaller BED (e.g. housekeeping genes) or skipping it
             if (!params.rseqc_skip_gene_body) {
                 gene_body_bed = params.rseqc_gene_body_bed ? file(params.rseqc_gene_body_bed, checkIfExists: true) : ucsc_gtf_to_bed.out.bed
-                rseqc_gene_body_coverage(bam_bai_out, gene_body_bed)
+                rseqc_gene_body_coverage(rseqc_bam, gene_body_bed)
             }
     	    
-    	    rseqc_infer_experiment(bam_bai_out, ucsc_gtf_to_bed.out.bed)
-    	    rseqc_read_distribution(bam_bai_out, ucsc_gtf_to_bed.out.bed)
-    	    rseqc_junction_annotation(bam_bai_out, ucsc_gtf_to_bed.out.bed)
-    	    rseqc_junction_saturation(bam_bai_out, ucsc_gtf_to_bed.out.bed)		
+    	    rseqc_infer_experiment(rseqc_bam, ucsc_gtf_to_bed.out.bed)
+    	    rseqc_read_distribution(rseqc_bam, ucsc_gtf_to_bed.out.bed)
+    	    rseqc_junction_annotation(rseqc_bam, ucsc_gtf_to_bed.out.bed)
+    	    rseqc_junction_saturation(rseqc_bam, ucsc_gtf_to_bed.out.bed)		
 
             bam_stat_ch = rseqc_bam_stat.out.bam_stat
             read_duplication_ch = rseqc_read_duplication.out.read_duplication_files
@@ -679,7 +686,7 @@ workflow preprocess_illumina {
             junction_saturation_mqc_ch = junction_saturation_ch.map { meta, file -> file }
             
             if (!params.nanopore) {
-        	rseqc_inner_distance(bam_bai_out.filter { meta, bam, bai -> meta.paired_end }, ucsc_gtf_to_bed.out.bed)
+        	rseqc_inner_distance(rseqc_bam.filter { meta, bam, bai -> meta.paired_end }, ucsc_gtf_to_bed.out.bed)
         	inner_distance_ch = rseqc_inner_distance.out.inner_distance_files
         	inner_distance_mqc_ch = inner_distance_ch.map { meta, file -> file } 
         	}
