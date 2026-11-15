@@ -32,7 +32,7 @@ process featurecounts {
     }
     else {
     """
-    featureCounts -pBP -T ${task.cpus} -s ${meta.strandedness} -a ${annotation} -o ${meta.sample}.counts.tsv ${additionalParams} ${bam}
+    featureCounts -pBP -D ${params.featurecounts_max_fragment_length} -T ${task.cpus} -s ${meta.strandedness} -a ${annotation} -o ${meta.sample}.counts.tsv ${additionalParams} ${bam}
     """
     }
 }

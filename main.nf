@@ -10,7 +10,7 @@ nextflow.enable.dsl=2
 
 // Parameters sanity checking
 
-Set valid_params = ['max_cores', 'cores', 'memory', 'profile', 'help', 'reads', 'genome', 'nanopore', 'minimap2_additional_params', 'minimap2_dir',  'annotation', 'deg', 'autodownload', 'pathway', 'species', 'include_species', 'strand', 'mode', 'tpm', 'fastp_additional_params', 'hisat2_additional_params', 'featurecounts_additional_params', 'feature_id_type', 'busco_db', 'dammit_uniref90', 'skip_sortmerna', 'skip_read_preprocessing', 'run_rseqc', 'rseqc_gene_body_bed', 'rseqc_skip_gene_body', 'rseqc_subsample_reads', 'assembly', 'output', 'fastp_dir', 'sortmerna_dir', 'hisat2_dir', 'rseqc_dir', 'featurecounts_dir', 'tpm_filter_dir', 'annotation_dir', 'deseq2_dir', 'assembly_dir', 'rnaseq_annotation_dir', 'uniref90_dir', 'readqc_dir', 'multiqc_dir', 'nf_runinfo_dir', 'permanentCacheDir', 'condaCacheDir', 'singularityCacheDir', 'softlink_results', 'cloudProcess', 'permanent-cache-dir', 'conda-cache-dir', 'singularity-cache-dir', 'cloud-process', 'setup', 'rna', 'aligner', 'star_additional_params', 'star_dir', 'star_sjdbOverhang','star_sjdb-overhang'] // don't ask me why there is 'permanent-cache-dir', 'conda-cache-dir', 'singularity-cache-dir', 'cloud-process'
+Set valid_params = ['max_cores', 'cores', 'memory', 'profile', 'help', 'reads', 'genome', 'nanopore', 'minimap2_additional_params', 'minimap2_dir',  'annotation', 'deg', 'autodownload', 'pathway', 'species', 'include_species', 'strand', 'mode', 'tpm', 'fastp_additional_params', 'hisat2_additional_params', 'featurecounts_additional_params', 'featurecounts_max_fragment_length', 'feature_id_type', 'busco_db', 'dammit_uniref90', 'skip_sortmerna', 'skip_read_preprocessing', 'run_rseqc', 'rseqc_gene_body_bed', 'rseqc_skip_gene_body', 'rseqc_subsample_reads', 'assembly', 'output', 'fastp_dir', 'sortmerna_dir', 'hisat2_dir', 'rseqc_dir', 'featurecounts_dir', 'tpm_filter_dir', 'annotation_dir', 'deseq2_dir', 'assembly_dir', 'rnaseq_annotation_dir', 'uniref90_dir', 'readqc_dir', 'multiqc_dir', 'nf_runinfo_dir', 'permanentCacheDir', 'condaCacheDir', 'singularityCacheDir', 'softlink_results', 'cloudProcess', 'permanent-cache-dir', 'conda-cache-dir', 'singularity-cache-dir', 'cloud-process', 'setup', 'rna', 'aligner', 'star_additional_params', 'star_dir', 'star_sjdbOverhang','star_sjdb-overhang'] // don't ask me why there is 'permanent-cache-dir', 'conda-cache-dir', 'singularity-cache-dir', 'cloud-process'
 
 def parameter_diff = params.keySet() - valid_params
 if (parameter_diff.size() != 0){
@@ -1105,6 +1105,7 @@ def helpMSG() {
     --hisat2_additional_params         Additional parameters for HISAT2 [default: $params.hisat2_additional_params]
     --minimap2_additional_params       Additional parameters for minimap2 (Nanopore input) [default: $params.minimap2_additional_params]
     --featurecounts_additional_params  Additional parameters for FeatureCounts [default: $params.featurecounts_additional_params]
+    --featurecounts_max_fragment_length  Paired-end only: max fragment length (-D) used by featureCounts -P [default: $params.featurecounts_max_fragment_length]
     --nanopore                         Activate Nanopore long-read mode (default is Illumina data) [default: $params.nanopore]  
 
     ${c_yellow}DEG analysis options:${c_reset}
