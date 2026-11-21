@@ -9,6 +9,9 @@ process fastp {
 
     if ( params.softlink_results ) { publishDir "${params.output}/${params.fastp_dir}", pattern: "*.trimmed.fastq.gz" }
     else { publishDir "${params.output}/${params.fastp_dir}", mode: 'copy', pattern: "*.trimmed.fastq.gz" }
+    // fastp writes its HTML report to fastp.html by default; publish it as <sample>_fastp.html
+    if ( params.softlink_results ) { publishDir "${params.output}/${params.fastp_dir}/html", pattern: "fastp.html", saveAs: { fn -> "${meta.sample}_fastp.html" } }
+    else { publishDir "${params.output}/${params.fastp_dir}/html", mode: 'copy', pattern: "fastp.html", saveAs: { fn -> "${meta.sample}_fastp.html" } }
 
     input:
     tuple val(meta), path(reads)
@@ -16,6 +19,7 @@ process fastp {
     output:
     tuple val(meta), path("${meta.sample}*.trimmed.fastq.gz"), emit: sample_trimmed
     path "${meta.sample}_fastp.json", emit: json_report
+    path "fastp.html", emit: html
 
     script:
     if ( !meta.paired_end ) {
